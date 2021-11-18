@@ -1,6 +1,7 @@
 # Gurobi Installation
 licensetools9.1.2_win54/
 gorobi.lic
+model_formulation.lp
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
