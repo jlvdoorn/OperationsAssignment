@@ -1,5 +1,5 @@
 # Operations Optimization Assignment
-## A Vehicle Routing Problem
+A Vehicle Routing Problem
 
 # Usage
 Run ```main.py```
