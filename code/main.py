@@ -38,6 +38,7 @@ plt.plot(Xs,Ys,'*')
 plt.xlim((-1,1))
 plt.ylim((-1,1))
 plt.legend(['Customer','Depot','SDL'])
+plt.title('Nodes')
 plt.show()
 
 #################
@@ -105,6 +106,11 @@ z[3] = model.addVar(lb=0, vtype=GRB.BINARY, name='Z3')
 # Update the model (important!) so all variables are added to the model  
 model.update()
 
+# C[i,j] - cost 
+c = {}
+c[0,1] = 1
+
+
 ###################
 ### CONSTRAINTS ###
 ###################
@@ -118,15 +124,15 @@ model.update()
 # Defining objective function     
 obj = LinExpr() 
 
-for i in C+S+D:
-     for j in C+S+D:
+for i in range(C+S+D):
+     for j in range(C+S+D):
           obj = obj + c[i,j]*x[i,j] # x[i,j] loopt van x[0,1] tot x[4,5]
 
-for i in C:
-     for j in S:
+for i in range(C):
+     for j in range(S):
           obj = obj + P*y[i,j]
 
-for i in C+S:
+for i in range(C+S):
      obj = obj + G*x[0,i]
 
 # Important: here we are telling the solver we want to minimize the objective
