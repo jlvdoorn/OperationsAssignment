@@ -73,7 +73,7 @@ x[0,6] = model.addVar(lb=0, vtype=GRB.BINARY, name='Xds1')
 x[0,7] = model.addVar(lb=0, vtype=GRB.BINARY, name='Xds2')
 x[0,8] = model.addVar(lb=0, vtype=GRB.BINARY, name='Xds3')
 
-# Y[i,j] - binary varibale indicating wether i is deliverd to SDL j
+# Y[i,j] - binary varibale indicating whether i is deliverd to SDL j
 y = {}
 y[1,1] = model.addVar(lb=0, vtype=GRB.BINARY, name='Y11')
 y[1,2] = model.addVar(lb=0, vtype=GRB.BINARY, name='Y12')
@@ -108,6 +108,23 @@ model.update()
 ###################
 ### CONSTRAINTS ###
 ###################
+
+thisLHS = LinExpr()
+# each order must be delivered either to C or to S
+for i in C+S+D:
+    for j in C:
+        thisLHS = thisLHS + x[i,j]
+
+for i in C:        
+    for j in S:
+        thisLHS = thisLHS + y[i,j]
+
+model.addConstr(lhs=thisLHS, vtype=GRB.BINARY, rhs= 1, name='Const1')
+
+# thisLHS = LinExpr()
+# thisLHS += y[9]-y[2]+x[2]
+# model.addConstr(lhs=thisLHS, sense=GRB.GREATER_EQUAL, rhs=ub_normal_length[2],
+#                          name='C_J')
 
 
 
