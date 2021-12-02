@@ -162,8 +162,6 @@ for i in range(1,C+S+D+1,1):
           c[i,j] = K*d[i,j]
 
 
-
-
 ###################
 ### CONSTRAINTS ###
 ###################
@@ -198,16 +196,13 @@ model.addConstr(lhs=thisLHS, vtype=GRB.BINARY, rhs= 1, name='Const1')
 # Defining objective function     
 obj = LinExpr() 
 
-for i in range(C+S+D):
-     for j in range(C+S+D):
+for i in range(1,C+S+D+1,1):
+     for j in range(1,C+S+D+1,1):
           obj = obj + c[i,j]*x[i,j] # x[i,j] loopt van x[0,1] tot x[4,5]
 
-for i in range(C):
-     for j in range(S):
-          obj = obj + P*y[i,j]
-
-for i in range(C+S):
-     obj = obj + G*x[0,i]
+for p in range(1,C+1,1):
+     for f in range(1,S+1,1):
+          obj = obj + P*y[p,f]
 
 # Important: here we are telling the solver we want to minimize the objective
 # function. Make sure you are selecting the right option!    
