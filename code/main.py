@@ -192,6 +192,7 @@ c={}
 d={}
 for i in range(0,C+S+D,1):
      for j in range(0,C+S+D,1):
+          # d[i,j] = 1
           d[i,j] = np.sqrt( (Xpos[j]-Xpos[i])**2 + (Ypos[j]-Ypos[i])**2 )
           c[i,j] = K*d[i,j]
 
