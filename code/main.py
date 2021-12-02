@@ -16,7 +16,7 @@ S = 3 # Number of Shared Delivery Locations
 D = 1 # Number of Depots
 
 P = 0.2 # Penalty voor thuisbezorgen (delta)
-G = 1 # Fixed cost per vehicle (gamma)
+K = 1 # Cost per km
 
 
 # Locaties
@@ -30,6 +30,17 @@ Yd = 0
 
 Xs = [-0.5,0.6,0.4]
 Ys = [0.8,-0.6,0.4]
+
+Xpos=[]
+Xpos = Xpos.append[Xd]
+Xpos = Xpos.append[Xc]
+Xpos = Xpos.append[Xs]
+
+Ypos=[]
+Ypos = Ypos.append[Yd]
+Ypos = Ypos.append[Yc]
+Ypos = Ypos.append[Ys]
+
 
 plt.figure(1)
 plt.plot(Xc,Yc,'o')
@@ -140,9 +151,17 @@ z[3] = model.addVar(lb=0, vtype=GRB.BINARY, name='Z3')
 # Update the model (important!) so all variables are added to the model  
 model.update()
 
-# C[i,j] - cost 
-c = {}
-c[0,1] = 1
+# c[i,j] cost from node i to node j 
+# c[i,j]=k*d[i,j] - Cost per km times distance (km)
+
+c={}
+d={}
+for i in range(1,C+S+D+1,1):
+     for j in range(1,C+S+D+1,1):
+          d[i,j] = np.sqrt( (Xpos(j)-Xpos(i))^2 + (Ypos(j)-Ypos(i))^2 )
+          c[i,j] = K*d[i,j]
+
+
 
 
 ###################
