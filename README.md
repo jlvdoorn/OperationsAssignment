@@ -10,5 +10,6 @@ In Test, there are some sample Gurobi files that were on Brightspace.
 
 If you build something, please document it well enough :)
 
-# TODOs
-1. Build Code
+# TO-DOs
+1. Find the over constraint/fix constraints
+2. Report everything

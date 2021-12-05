@@ -295,7 +295,7 @@ model.optimize()
 solution = []
 for v in model.getVars():
      solution.append([v.varName,v.x])
-     if v.x != 0.0:
+     if v.x != 0.0: # Print all nonzero variables and its values
           print(v.varName, v.x)
      
 print(solution)
