@@ -35,17 +35,6 @@ Xpos=[0,-0.8,0.2,0.5,-0.3,0.7,-0.5,0.6,0.4]
 Ypos=[0,0.2,0.5,0.7,-0.3,-0.8,0.8,-0.6,0.4]
 
 
-
-# plt.figure(1)
-# plt.plot(Xc,Yc,'o')
-# plt.plot(Xd,Yd,'x')
-# plt.plot(Xs,Ys,'*')
-# plt.xlim((-1,1))
-# plt.ylim((-1,1))
-# plt.legend(['Customer','Depot','SDL'])
-# plt.title('Nodes')
-# plt.show()
-
 #################
 ### VARIABLES ###
 #################
@@ -247,8 +236,7 @@ for j in range(0,C+S+D,1):
           thisLHS = thisLHS + x[j,i]
      model.addConstr(lhs=thisLHS, sense=GRB.EQUAL, rhs=thisRHS, name='Continuity %d' % j)
 
-
-## Ensure that if there is at least 1 package going to SDL f, then SDL f must also be visited
+# Ensure that if there is at least 1 package going to SDL f, then SDL f must also be visited
 for f in range(1,S+1,1):
      thisLHS = LinExpr()
      thisLHS = thisLHS + z[f]
@@ -265,6 +253,11 @@ for f in range(1,S+1,1):
           thisLHS = thisLHS + x[i,f]
      thisRHS = z[f]
      model.addConstr(lhs=thisLHS, sense=GRB.EQUAL, rhs=thisRHS, name='SDL %d ACTIVE' % f)
+
+## Comment Jan @ 5-12-2021 11.43
+# Ik heb het model gerund met aanvankelijk 1 constraint, deze steeds verder uitgebreid. 
+# Er komen allemaal normale uitkomsten uit totdat het laatste constraint wordt geactiveerd. 
+# Moeten er nog maar even naar kijken vlgnde donderdag. Maar er zit echt ergens een fout in de constraints.
 
 model.update()
 
@@ -302,5 +295,20 @@ model.optimize()
 solution = []
 for v in model.getVars():
      solution.append([v.varName,v.x])
+     if v.x != 0.0:
+          print(v.varName, v.x)
      
 print(solution)
+
+## TODO: Hieronder nog mooie plot maken met alle punten en links die active zijn. // Je resultaat plotten.
+
+# Plot alle punten (C, SDL, D)
+plt.figure(1)
+plt.plot(Xc,Yc,'o')
+plt.plot(Xd,Yd,'x')
+plt.plot(Xs,Ys,'*')
+plt.xlim((-1,1))
+plt.ylim((-1,1))
+plt.legend(['Customer','Depot','SDL'])
+plt.title('Nodes')
+plt.show()
