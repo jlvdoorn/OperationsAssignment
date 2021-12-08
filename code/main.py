@@ -191,40 +191,48 @@ for i in range(0,C+S+D,1):
 ###################
 
 ## Each package must be delivered either to Customer or SDL (5 constrsints)
-thisLHS = LinExpr()
-for i in range(0,C+S+D,1):
-     thisLHS = thisLHS + x[i,1] # j = 1
-for f in range(1,S+1,1):
-     thisLHS = thisLHS + y[1,f] # j = 1
-model.addConstr(lhs=thisLHS, sense=GRB.EQUAL, rhs=1, name='CtoS 1')
+for j in range(1,C+1,1):
+     thisLHS = LinExpr()
+     for i in range(0,C+S+D,1):
+          thisLHS = thisLHS + x[i,j]
+     for f in range(1,S+1,1):
+          thisLHS = thisLHS + y[j,f]
+     model.addConstr(lhs=thisLHS, sense=GRB.EQUAL, rhs=1, name='Package %d to C or S' % j)
 
-thisLHS = LinExpr()
-for i in range(0,C+S+D,1):
-     thisLHS = thisLHS + x[i,2] # j = 2
-for f in range(1,S+1,1):
-     thisLHS = thisLHS + y[2,f] # j = 2
-model.addConstr(lhs=thisLHS, sense=GRB.EQUAL, rhs=1, name='CtoS 2')
+# thisLHS = LinExpr()
+# for i in range(0,C+S+D,1):
+#      thisLHS = thisLHS + x[i,1] # j = 1
+# for f in range(1,S+1,1):
+#      thisLHS = thisLHS + y[1,f] # j = 1
+# model.addConstr(lhs=thisLHS, sense=GRB.EQUAL, rhs=1, name='CtoS 1')
+
+# thisLHS = LinExpr()
+# for i in range(0,C+S+D,1):
+#      thisLHS = thisLHS + x[i,2] # j = 2
+# for f in range(1,S+1,1):
+#      thisLHS = thisLHS + y[2,f] # j = 2
+# model.addConstr(lhs=thisLHS, sense=GRB.EQUAL, rhs=1, name='CtoS 2')
      
-thisLHS = LinExpr()
-for i in range(0,C+S+D,1):
-     thisLHS = thisLHS + x[i,3] # j = 3
-for f in range(1,S+1,1):
-     thisLHS = thisLHS + y[3,f] # j = 3
-model.addConstr(lhs=thisLHS, sense=GRB.EQUAL, rhs=1, name='CtoS 3')
+# thisLHS = LinExpr()
+# for i in range(0,C+S+D,1):
+#      thisLHS = thisLHS + x[i,3] # j = 3
+# for f in range(1,S+1,1):
+#      thisLHS = thisLHS + y[3,f] # j = 3
+# model.addConstr(lhs=thisLHS, sense=GRB.EQUAL, rhs=1, name='CtoS 3')
 
-thisLHS = LinExpr()
-for i in range(0,C+S+D,1):
-     thisLHS = thisLHS + x[i,4] # j = 4
-for f in range(1,S+1,1):
-     thisLHS = thisLHS + y[4,f] # j = 4
-model.addConstr(lhs=thisLHS, sense=GRB.EQUAL, rhs=1, name='CtoS 4')
+# thisLHS = LinExpr()
+# for i in range(0,C+S+D,1):
+#      thisLHS = thisLHS + x[i,4] # j = 4
+# for f in range(1,S+1,1):
+#      thisLHS = thisLHS + y[4,f] # j = 4
+# model.addConstr(lhs=thisLHS, sense=GRB.EQUAL, rhs=1, name='CtoS 4')
 
-thisLHS = LinExpr()
-for i in range(0,C+S+D,1):
-     thisLHS = thisLHS + x[i,5] # j = 3
-for f in range(1,S+1,1):
-     thisLHS = thisLHS + y[5,f] # j = 3
-model.addConstr(lhs=thisLHS, sense=GRB.EQUAL, rhs=1, name='CtoS 5')
+# thisLHS = LinExpr()
+# for i in range(0,C+S+D,1):
+#      thisLHS = thisLHS + x[i,5] # j = 3
+# for f in range(1,S+1,1):
+#      thisLHS = thisLHS + y[5,f] # j = 3
+# model.addConstr(lhs=thisLHS, sense=GRB.EQUAL, rhs=1, name='CtoS 5')
 
 ## Route continuity X[1,2] = x[2,1] etc..
 for j in range(0,C+S+D,1):
