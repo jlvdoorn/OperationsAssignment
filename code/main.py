@@ -304,7 +304,7 @@ for v in model.getVars():
      
 print(solution)
 
-# Plot alle punten (C, SDL, D)
+# Plot all nodes (C, SDL, D)
 plt.figure(1)
 plt.plot(Xc,Yc,'o',linewidth=2)
 plt.plot(Xd,Yd,'x',linewidth=2)
@@ -313,22 +313,25 @@ plt.xlim((-1,1))
 plt.ylim((-1,1))
 plt.legend(['Customer','Depot','SDL'])
 plt.title('Nodes')
-# plt.show()
 
-# Plot alle actieve links
-nzlinks = []
+## Plot all active links
+nzlinks = [] # Get all links
 for sol in range(np.shape(nzsolution)[0]):
      nzlinks.append([nzsolution[sol][0]])
 
-nzx = []
+nzx = [] # Get all links containing 'X'
 for lnk in range(np.shape(nzlinks)[0]):
-     if "X" in nzlinks[lnk][0]: # if link name contains 'X'
+     if "X" in nzlinks[lnk][0]:
           nzx.append(nzlinks[lnk][0])
 
-for idx in range(np.size(nzx)):
+for idx in range(np.size(nzx)):# Plot all active links containing 'X'
      from_idx = int(nzx[idx][1])
      to_idx = int(nzx[idx][2])
      # Plot link from node(from_idx) to node(to_idx)
      plt.plot([Xpos[from_idx],Xpos[to_idx]],[Ypos[from_idx],Ypos[to_idx]],'-k',linewidth=1)
 
+# Add labels to the plot
+lbl = ['D','C1','C2','C3','C4','C5','S1','S2','S3']
+for k in range(np.size(Xpos)):
+     plt.text(Xpos[k]+0.05,Ypos[k],lbl[k],verticalalignment='center_baseline',horizontalalignment='left')
 plt.show()
