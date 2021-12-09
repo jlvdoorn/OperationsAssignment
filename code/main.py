@@ -15,7 +15,7 @@ C = 5 # Number of Customers
 S = 3 # Number of Shared Delivery Locations
 D = 1 # Number of Depots
 
-P = 0.2 # Penalty voor thuisbezorgen (delta)
+P = 10 # Penalty voor thuisbezorgen (delta)
 K = 1 # Cost per km
 
 
@@ -221,18 +221,17 @@ model.addConstr(lhs=x[8,8], sense=GRB.EQUAL, rhs=0, name='Continuity %d' % j)
 # Ensure that if there is at least 1 package going to SDL f, then SDL f must also be visited
 for f in range(1,S+1,1):
      thisLHS = LinExpr()
-     thisLHS = thisLHS + z[f]
      thisRHS = LinExpr()
      for p in range(1,C+1,1):
-          thisRHS = thisRHS+y[p,f]
-     thisRHS = thisRHS/C
+          thisLHS = thisLHS+y[p,f]
+     thisRHS = z[f]
      model.addConstr(lhs=thisLHS, sense=GRB.GREATER_EQUAL, rhs=thisRHS, name='SDL %d ACTIVE' % f)
 
 for f in range(1,S+1,1):
      thisLHS = LinExpr()
      thisRHS = LinExpr()
      for i in range(0,C+S+D,1):
-          thisLHS = thisLHS + x[i,f]
+          thisLHS = thisLHS + x[i,C+f]
      thisRHS = z[f]
      model.addConstr(lhs=thisLHS, sense=GRB.EQUAL, rhs=thisRHS, name='SDL %d ACTIVE' % f)
 
@@ -252,10 +251,13 @@ for j in range(0,C+S+D,1):
      thisLHS = thisLHS + x[0,j]
 model.addConstr(lhs=thisLHS, sense=GRB.EQUAL, rhs=1, name='At least one route from depot active')    
 
-## Comment Jan @ 5-12-2021 11.43
-# Ik heb het model gerund met aanvankelijk 1 constraint, deze steeds verder uitgebreid. 
-# Er komen allemaal normale uitkomsten uit totdat het laatste constraint wordt geactiveerd. 
-# Moeten er nog maar even naar kijken vlgnde donderdag. Maar er zit echt ergens een fout in de constraints.
+# # Only one departure and one arrival permitted per node.
+# thisLHS = LinExpr()
+# for i in range(0,C+S+D,1):
+#      for j in range(0,C+S+D,1):
+#           thisLHS = thisLHS + x[i,j]
+#      model.addConstr(lhs=thisLHS, sense=GRB.EQUAL, rhs=1, name='One dep and arr per node')
+
 
 model.update()
 
