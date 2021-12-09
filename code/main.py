@@ -203,11 +203,20 @@ for j in range(1,C+1,1):
 for j in range(0,C+S+D,1):
      thisLHS = LinExpr()
      for i in range(0,C+S+D,1):
-          thisLHS = thisLHS + x[i,j]
-     thisRHS = LinExpr()
-     for i in range(0,C+S+D,1):
-          thisLHS = thisLHS + x[j,i]
-     model.addConstr(lhs=thisLHS, sense=GRB.EQUAL, rhs=thisRHS, name='Continuity %d' % j)
+          for j in range(0,C+S+D,1):
+               thisLHS = x[i,j] + x[j,i]
+               model.addConstr(lhs=thisLHS, sense=GRB.LESS_EQUAL, rhs=1, name='Continuity %d' % j)
+
+# x[i,i] = 0 - Die bestaan natuurlijk niet. 
+model.addConstr(lhs=x[0,0], sense=GRB.EQUAL, rhs=0, name='Continuity %d' % j)
+model.addConstr(lhs=x[1,1], sense=GRB.EQUAL, rhs=0, name='Continuity %d' % j)
+model.addConstr(lhs=x[2,2], sense=GRB.EQUAL, rhs=0, name='Continuity %d' % j)
+model.addConstr(lhs=x[3,3], sense=GRB.EQUAL, rhs=0, name='Continuity %d' % j)
+model.addConstr(lhs=x[4,4], sense=GRB.EQUAL, rhs=0, name='Continuity %d' % j)
+model.addConstr(lhs=x[5,5], sense=GRB.EQUAL, rhs=0, name='Continuity %d' % j)
+model.addConstr(lhs=x[6,6], sense=GRB.EQUAL, rhs=0, name='Continuity %d' % j)
+model.addConstr(lhs=x[7,7], sense=GRB.EQUAL, rhs=0, name='Continuity %d' % j)
+model.addConstr(lhs=x[8,8], sense=GRB.EQUAL, rhs=0, name='Continuity %d' % j)
 
 # Ensure that if there is at least 1 package going to SDL f, then SDL f must also be visited
 for f in range(1,S+1,1):
@@ -227,6 +236,22 @@ for f in range(1,S+1,1):
      thisRHS = z[f]
      model.addConstr(lhs=thisLHS, sense=GRB.EQUAL, rhs=thisRHS, name='SDL %d ACTIVE' % f)
 
+# If package p is not going to SDL, then a route from Depot or a Customer or an SDL to customer p must be active.
+for p in range(1,C+1,1):
+     thisLHS = LinExpr()
+     for f in range(1,S+1,1):
+          thisLHS = thisLHS + y[p,f]
+     for i in range(0,C+S+D,1):
+          thisLHS = thisLHS + x[i,p]
+     model.addConstr(lhs=thisLHS, sense=GRB.EQUAL, rhs=thisRHS, name='Route to customer %d active' % p)
+
+
+# There must at least one route starting at SDL
+thisLHS = LinExpr()
+for j in range(0,C+S+D,1):
+     thisLHS = thisLHS + x[0,j]
+model.addConstr(lhs=thisLHS, sense=GRB.EQUAL, rhs=1, name='At least one route from depot active')    
+
 ## Comment Jan @ 5-12-2021 11.43
 # Ik heb het model gerund met aanvankelijk 1 constraint, deze steeds verder uitgebreid. 
 # Er komen allemaal normale uitkomsten uit totdat het laatste constraint wordt geactiveerd. 
@@ -243,7 +268,8 @@ obj = LinExpr()
 
 for i in range(0,C+S+D,1):
      for j in range(0,C+S+D,1):
-          obj = obj + c[i,j]*x[i,j] # x[i,j] loopt van x[0,1] tot x[4,5]
+          if j!=i:
+               obj = obj + 0.5*c[i,j]*x[i,j] # x[i,j] loopt van x[0,1] tot x[4,5]
 
 for p in range(1,C+1,1):
      for f in range(1,S+1,1):
@@ -260,6 +286,7 @@ model.write('model_formulation.lp')
 ####################
 ### OPTIMIZATION ###
 ####################
+model.display()
 
 # Here the model is actually being optimized
 model.optimize()
