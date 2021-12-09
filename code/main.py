@@ -295,22 +295,40 @@ model.optimize()
 
 # Saving our solution in the form [name of variable, value of variable]
 solution = []
+nzsolution = []
 for v in model.getVars():
      solution.append([v.varName,v.x])
      if v.x != 0.0: # Print all nonzero variables and its values
           print(v.varName, v.x)
+          nzsolution.append([v.varName, v.x])
      
 print(solution)
 
-## TODO: Hieronder nog mooie plot maken met alle punten en links die active zijn. // Je resultaat plotten.
-
 # Plot alle punten (C, SDL, D)
 plt.figure(1)
-plt.plot(Xc,Yc,'o')
-plt.plot(Xd,Yd,'x')
-plt.plot(Xs,Ys,'*')
+plt.plot(Xc,Yc,'o',linewidth=2)
+plt.plot(Xd,Yd,'x',linewidth=2)
+plt.plot(Xs,Ys,'*',linewidth=2)
 plt.xlim((-1,1))
 plt.ylim((-1,1))
 plt.legend(['Customer','Depot','SDL'])
 plt.title('Nodes')
+# plt.show()
+
+# Plot alle actieve links
+nzlinks = []
+for sol in range(np.shape(nzsolution)[0]):
+     nzlinks.append([nzsolution[sol][0]])
+
+nzx = []
+for lnk in range(np.shape(nzlinks)[0]):
+     if "X" in nzlinks[lnk][0]: # if link name contains 'X'
+          nzx.append(nzlinks[lnk][0])
+
+for idx in range(np.size(nzx)):
+     from_idx = int(nzx[idx][1])
+     to_idx = int(nzx[idx][2])
+     # Plot link from node(from_idx) to node(to_idx)
+     plt.plot([Xpos[from_idx],Xpos[to_idx]],[Ypos[from_idx],Ypos[to_idx]],'-k',linewidth=1)
+
 plt.show()
