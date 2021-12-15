@@ -292,6 +292,23 @@ for j in range(0,C+S+D,1): # Exception for the depot
      thisLHS = thisLHS + x[j,0]
 model.addConstr(lhs=thisLHS, sense=GRB.EQUAL, rhs=0, name='No arrival for the depot')
 
+
+## 9 Each C must be connected to the active SDL/SDL's so that length of link: C-SDL is taken into account
+for i in range(1,C+1,1):
+     thisLHS = LinExpr()
+     thisRHS = LinExpr()
+     for f in range(1,S+1,1):
+         # if y[i,f] == 1.0:
+        thisRHS = thisRHS + y[i,f]
+     for j in range(6,9):
+          thisLHS = thisLHS + x[i,j]
+
+          model.addConstr(lhs=thisLHS, sense=GRB.LESS_EQUAL, rhs=thisRHS, name='Each C connected to SDL if SDL active')
+
+
+
+
+
 model.update()
 
 #################
