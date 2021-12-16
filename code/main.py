@@ -15,8 +15,8 @@ C = 5 # Number of Customers
 S = 3 # Number of Shared Delivery Locations
 D = 1 # Number of Depots
 
-P = 0 # Penalty voor niet thuisbezorgen (delta)
-K = 10000 # Cost per km
+P = 1000 # Penalty voor niet thuisbezorgen (delta)
+K = 1 # Cost per km
 
 
 # Locaties
@@ -170,6 +170,14 @@ z[1] = model.addVar(lb=0, vtype=GRB.BINARY, name='Z1')
 z[2] = model.addVar(lb=0, vtype=GRB.BINARY, name='Z2')
 z[3] = model.addVar(lb=0, vtype=GRB.BINARY, name='Z3')
 
+# N[i] - binary variable indicating wether customer i is active or not
+n = {}
+n[1] = model.addVar(lb=0, vtype=GRB.BINARY, name='N1')
+n[2] = model.addVar(lb=0, vtype=GRB.BINARY, name='N2')
+n[3] = model.addVar(lb=0, vtype=GRB.BINARY, name='N3')
+n[4] = model.addVar(lb=0, vtype=GRB.BINARY, name='N4')
+n[5] = model.addVar(lb=0, vtype=GRB.BINARY, name='N5')
+
 
 # Update the model (important!) so all variables are added to the model  
 model.update()
@@ -242,17 +250,7 @@ for f in range(1,S+1,1):
      for i in range(0,C+S+D,1):
           thisRHS = thisRHS + x[C+f,i]
      thisLHS = thisLHS + z[f]
-     model.addConstr(lhs=thisRHS, sense=GRB.EQUAL, rhs=thisLHS, name='Leaving route from SDL %d if visited' % f)
-
-## 5. If package p is not going to SDL, then a route from Depot or a Customer or an SDL to customer p must be active.
-for p in range(1,C+1,1):
-     thisLHS = LinExpr()
-     for f in range(1,S+1,1):
-          thisLHS = thisLHS + y[p,f]
-     for i in range(0,C+S+D,1):
-          thisLHS = thisLHS + x[i,p]
-     model.addConstr(lhs=thisLHS, sense=GRB.EQUAL, rhs=1, name='Route to customer %d active' % p)
-
+     model.addConstr(lhs=thisLHS, sense=GRB.EQUAL, rhs=thisRHS, name='Leaving route from SDL %d if visited' % f)
 
 ## 6. There must start a route at the depot.
 thisLHS = LinExpr()
@@ -260,7 +258,7 @@ for j in range(0,C+S+D,1):
      thisLHS = thisLHS + x[0,j]
 model.addConstr(lhs=thisLHS, sense=GRB.EQUAL, rhs=1, name='Starting route from depot')    
 
-## 7. There must be a departure for each node.
+## 7. There may be only one departure for each node.
 for i in range(0,C+S+D,1):
      thisLHS = LinExpr()
      for j in range(0,C+S+D,1):
@@ -270,27 +268,63 @@ for i in range(0,C+S+D,1):
 
 ## 8. There must be an arrival each node - Split into customer, sdl and depot
 ## 8a. There must be an arrival at the customer if package p will be delivered to the customer
-for i in range(1,C,1):
+for i in range(1,C+1,1):
+     thisLHS = LinExpr()
+     thisRHS = LinExpr()
+     for f in range(1,S+1,1):
+          thisLHS = thisLHS + y[i,f]
+     for j in range(0,C+S+D,1):
+          thisLHS = thisLHS + x[i,j]
+     model.addConstr(lhs=thisLHS, sense=GRB.EQUAL, rhs=1, name='Only a departure permitted at customer if package is not going to sdl.')
+# for i in range(1,C+1,1):
+#      thisLHS = LinExpr()
+#      thisRHS = LinExpr()
+#      for j in range(1,C+S+D,1):
+#           thisLHS = thisLHS + x[j,i]
+#      for f in range(1,S+1,1):
+#           thisRHS = thisRHS + y[i,f]
+#      model.addConstr(lhs=thisLHS, sense=GRB.LESS_EQUAL, rhs=thisRHS, name='One arrival per customer if customer get package')
+## 8b. There must be an arrival at the SDL if the SDL is active.
+for f in range(1,S+1,1):
      thisLHS = LinExpr()
      thisRHS = LinExpr()
      for j in range(0,C+S+D,1):
-          thisLHS = thisLHS + x[j,i]
-     for f in range(1,S+1,1):
-          thisRHS = thisRHS + y[i,f]
-     model.addConstr(lhs=thisLHS, sense=GRB.LESS_EQUAL, rhs=thisRHS, name='One arrival per SDL if SDL active')
-## 8b. There must be an arrival at the SDL if the SDL is active.
-# for f in range(1,S+1,1):
-#      thisLHS = LinExpr()
-#      thisRHS = LinExpr()
-#      for j in range(0,C+S+D,1):
-#           thisLHS = thisLHS + x[j,f+5]
-#      thisRHS = z[f]
-#      model.addConstr(lhs=thisRHS, sense=GRB.EQUAL, rhs=thisLHS, name='One arrival per SDL if SDL active')
-## 8c. There must NOT be an arrival at the depot.
+          thisLHS = thisLHS + x[j,f+5]
+     thisRHS = z[f]
+     model.addConstr(lhs=thisLHS, sense=GRB.EQUAL, rhs=thisRHS, name='One arrival per SDL if SDL active')
+## 8c. There must be an arrival at the depot.
 thisLHS = LinExpr()
 for j in range(0,C+S+D,1): # Exception for the depot
      thisLHS = thisLHS + x[j,0]
-model.addConstr(lhs=thisLHS, sense=GRB.EQUAL, rhs=0, name='No arrival for the depot')
+model.addConstr(lhs=thisLHS, sense=GRB.EQUAL, rhs=1, name='No arrival for the depot')
+
+## 9. If customer i is active - Ni =1
+for i in range(1,C+1,1):
+     thisLHS = LinExpr()
+     thisRHS = LinExpr()
+     for f in range(1,S+1,1):
+          thisLHS = thisLHS + y[i,f]
+     thisRHS = n[i]
+     model.addConstr(lhs=thisLHS, sense=GRB.EQUAL, rhs=thisRHS, name='Ni is 1 if customer %d (i) is active' % i)
+
+## 10. # Active Links = # Active Nodes + 1
+thisLHS = LinExpr()
+thisRHS = LinExpr()
+
+
+for i in range(0,C+S+D,1): # number of active links
+     for j in range(0,C+S+D,1):
+          thisLHS = thisLHS + x[i,j]
+
+for f in range(1,S+1,1): # number of active sdls
+     thisRHS = thisRHS + z[f]
+
+for i in range(1,C+1,1): # number of active customers
+     thisRHS = thisRHS + n[i]
+
+thisRHS = thisRHS + 1 # number of active depots (always, 1)
+
+model.addConstr(lhs=thisLHS, sense=GRB.EQUAL, rhs=thisRHS+1, name='Active Links = Active Nodes + 1')
 
 model.update()
 
