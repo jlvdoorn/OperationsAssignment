@@ -1,7 +1,7 @@
 # Loading packages that are used in the code
 import numpy as np
 import pandas as pd
-from gurobipy import Model,GRB,LinExpr,quicksum
+from gurobipy import Model,GRB,LinExpr,quicksum,max_
 import matplotlib.pyplot as plt
 
 ###################
@@ -15,8 +15,8 @@ C = 5 # Number of Customers
 S = 3 # Number of Shared Delivery Locations
 D = 1 # Number of Depots
 
-P = 1000 # Penalty voor niet thuisbezorgen (delta)
-K = 1 # Cost per km
+P = 10000 # Penalty voor niet thuisbezorgen (delta)
+K = 0.1 # Cost per km
 
 
 # Locaties
@@ -207,9 +207,9 @@ for j in range(1,C+1,1):
           thisLHS = thisLHS + y[j,f]
      model.addConstr(lhs=thisLHS, sense=GRB.EQUAL, rhs=1, name='Package %d to C or S' % j)
 
-# 2. Route not reversible x[i,j] + x[j,i] = 1 --> x[i,j] = 1 OR x[j,i] = 1
-for i in range(0,C+S+D,1):
-     for j in range(0,C+S+D,1):
+# 2. Route not reversible x[i,j] + x[j,i] = 1 --> x[i,j] = 1 OR x[j,i] = 1 UNLESS NODE = SDL
+for i in range(0,C+D,1): # Voor alle nodes behalve SDLs
+     for j in range(0,C+D,1):
           thisLHS = LinExpr()
           thisLHS = thisLHS + x[i,j] + x[j,i]
           model.addConstr(lhs=thisLHS, sense=GRB.LESS_EQUAL, rhs=1, name='Route not reversible for node %d' % j)
@@ -227,12 +227,14 @@ model.addConstr(lhs=x[8,8], sense=GRB.EQUAL, rhs=0, name='Continuity %d' % j)
 
 ## 4a. Ensure that if there is at least 1 package going to SDL f, then SDL f must also be visited
 for f in range(1,S+1,1):
-     thisLHS = LinExpr()
-     thisRHS = LinExpr()
-     for p in range(1,C+1,1):
-          thisLHS = thisLHS+y[p,f]
-     thisRHS = thisRHS + z[f]           # TODO: Hier moet iets anders aan die LESS_EQUAL
-     model.addConstr(lhs=thisLHS/C, sense=GRB.LESS_EQUAL, rhs=thisRHS, name='SDL %d visited if package goes to SDL' % f)
+     # thisLHS = LinExpr()
+     # thisRHS = LinExpr()
+     # for p in range(1,C+1,1):
+     #      thisLHS = thisLHS+y[p,f]
+     # thisLHS = np.ceil(thisLHS/C)
+     # thisRHS = thisRHS + z[f]           
+     # model.addConstr(lhs=thisLHS, sense=GRB.EQUAL, rhs=thisRHS, name='SDL %d visited if package goes to SDL' % f)
+     model.addConstr(z[f] == max_(y[1,f],y[2,f],y[3,f],y[4,f],y[5,f]))
 
 ## 4b. Ensure that if SDL f is visited, there must be at least 1 route going to this SDL
 for f in range(1,S+1,1):
@@ -243,15 +245,6 @@ for f in range(1,S+1,1):
      thisLHS = thisLHS + z[f]
      model.addConstr(lhs=thisLHS, sense=GRB.EQUAL, rhs=thisRHS, name='Route to SDL %d if visited' % f)
      
-## 4c. If SDL is visited, there must be a leaving route # TODO: Tenzij het de laatste node in je route is. 
-for f in range(1,S+1,1):
-     thisLHS = LinExpr()
-     thisRHS = LinExpr()
-     for i in range(0,C+S+D,1):
-          thisRHS = thisRHS + x[C+f,i]
-     thisLHS = thisLHS + z[f]
-     model.addConstr(lhs=thisLHS, sense=GRB.EQUAL, rhs=thisRHS, name='Leaving route from SDL %d if visited' % f)
-
 ## 6. There must start a route at the depot.
 thisLHS = LinExpr()
 for j in range(0,C+S+D,1):
@@ -265,69 +258,41 @@ for i in range(0,C+S+D,1):
           thisLHS = thisLHS + x[i,j]
      model.addConstr(lhs=thisLHS, sense=GRB.LESS_EQUAL, rhs=1, name='One departure per node')
 
-
-## 8. There must be an arrival each node - Split into customer, sdl and depot
-## 8a. There must be an arrival at the customer if package p will be delivered to the customer
-for i in range(1,C+1,1):
-     thisLHS = LinExpr()
-     thisRHS = LinExpr()
-     for f in range(1,S+1,1):
-          thisLHS = thisLHS + y[i,f]
-     for j in range(0,C+S+D,1):
-          thisLHS = thisLHS + x[i,j]
-     model.addConstr(lhs=thisLHS, sense=GRB.EQUAL, rhs=1, name='Only a departure permitted at customer if package is not going to sdl.')
-# for i in range(1,C+1,1):
-#      thisLHS = LinExpr()
-#      thisRHS = LinExpr()
-#      for j in range(1,C+S+D,1):
-#           thisLHS = thisLHS + x[j,i]
-#      for f in range(1,S+1,1):
-#           thisRHS = thisRHS + y[i,f]
-#      model.addConstr(lhs=thisLHS, sense=GRB.LESS_EQUAL, rhs=thisRHS, name='One arrival per customer if customer get package')
-## 8b. There must be an arrival at the SDL if the SDL is active.
-for f in range(1,S+1,1):
-     thisLHS = LinExpr()
-     thisRHS = LinExpr()
-     for j in range(0,C+S+D,1):
-          thisLHS = thisLHS + x[j,f+5]
-     thisRHS = z[f]
-     model.addConstr(lhs=thisLHS, sense=GRB.EQUAL, rhs=thisRHS, name='One arrival per SDL if SDL active')
-## 8c. There must be an arrival at the depot.
+## 8. There must be an arrival at the depot.
 thisLHS = LinExpr()
 for j in range(0,C+S+D,1): # Exception for the depot
      thisLHS = thisLHS + x[j,0]
-model.addConstr(lhs=thisLHS, sense=GRB.EQUAL, rhs=1, name='No arrival for the depot')
+model.addConstr(lhs=thisLHS, sense=GRB.EQUAL, rhs=1, name='Arrival for the depot')
 
 ## 9. If customer i is active - Ni =1
 for i in range(1,C+1,1):
      thisLHS = LinExpr()
-     thisRHS = LinExpr()
      for f in range(1,S+1,1):
           thisLHS = thisLHS + y[i,f]
-     thisRHS = n[i]
-     model.addConstr(lhs=thisLHS, sense=GRB.EQUAL, rhs=thisRHS, name='Ni is 1 if customer %d (i) is active' % i)
+     thisLHS = thisLHS + n[i]
+     model.addConstr(lhs=thisLHS, sense=GRB.EQUAL, rhs=1, name='Ni is 1 if customer %d (i) is active' % i)
 
 ## 10. # Active Links = # Active Nodes + 1
 thisLHS = LinExpr()
 thisRHS = LinExpr()
-
-
 for i in range(0,C+S+D,1): # number of active links
      for j in range(0,C+S+D,1):
           thisLHS = thisLHS + x[i,j]
-
 for f in range(1,S+1,1): # number of active sdls
      thisRHS = thisRHS + z[f]
-
 for i in range(1,C+1,1): # number of active customers
      thisRHS = thisRHS + n[i]
-
 thisRHS = thisRHS + 1 # number of active depots (always, 1)
+model.addConstr(lhs=thisLHS, sense=GRB.EQUAL, rhs=thisRHS, name='Active Links = Active Nodes + 1')
 
-model.addConstr(lhs=thisLHS, sense=GRB.EQUAL, rhs=thisRHS+1, name='Active Links = Active Nodes + 1')
-
-
-
+## 11. If there is an arriving route at a node, there must also be a leaving route
+for j in range(0,C+S+D,1):
+     thisLHS = LinExpr()
+     thisRHS = LinExpr()
+     for i in range(0,C+S+D,1):
+          thisLHS = thisLHS + x[i,j]
+          thisRHS = thisRHS + x[j,i]
+     model.addConstr(lhs=thisLHS, sense=GRB.EQUAL, rhs=thisRHS, name='If arrving, then also leaving route at node %d' % j)
 
 model.update()
 
