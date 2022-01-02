@@ -15,7 +15,7 @@ C = 5 # Number of Customers
 S = 3 # Number of Shared Delivery Locations
 D = 1 # Number of Depots
 
-P = 10000 # Penalty voor niet thuisbezorgen (delta)
+P = 0.1 # Penalty voor niet thuisbezorgen (delta) # Threshold: 0.1102 - 0.1103
 K = 0.1 # Cost per km
 
 
@@ -272,7 +272,7 @@ for i in range(1,C+1,1):
      thisLHS = thisLHS + n[i]
      model.addConstr(lhs=thisLHS, sense=GRB.EQUAL, rhs=1, name='Ni is 1 if customer %d (i) is active' % i)
 
-## 10. # Active Links = # Active Nodes + 1
+## 10. # Active Links = # Active Nodes
 thisLHS = LinExpr()
 thisRHS = LinExpr()
 for i in range(0,C+S+D,1): # number of active links
@@ -283,7 +283,7 @@ for f in range(1,S+1,1): # number of active sdls
 for i in range(1,C+1,1): # number of active customers
      thisRHS = thisRHS + n[i]
 thisRHS = thisRHS + 1 # number of active depots (always, 1)
-model.addConstr(lhs=thisLHS, sense=GRB.EQUAL, rhs=thisRHS, name='Active Links = Active Nodes + 1')
+model.addConstr(lhs=thisLHS, sense=GRB.EQUAL, rhs=thisRHS, name='Active Links = Active Nodes')
 
 ## 11. If there is an arriving route at a node, there must also be a leaving route
 for j in range(0,C+S+D,1):
@@ -345,7 +345,8 @@ plt.plot(Xs,Ys,'*',linewidth=2)
 plt.xlim((-1,1))
 plt.ylim((-1,1))
 plt.legend(['Customer','Depot','SDL'])
-plt.title('Solution')
+plt.title('Low Penalty, High Cost', fontsize='medium')
+plt.suptitle('Solution')
 
 ## Plot all active links
 nzlinks = [] # Get all links
