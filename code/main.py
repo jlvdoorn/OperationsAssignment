@@ -15,8 +15,8 @@ C = 5 # Number of Customers
 S = 3 # Number of Shared Delivery Locations
 D = 1 # Number of Depots
 
-P = 0.1 # Penalty voor niet thuisbezorgen (delta) # Threshold: 0.1102 - 0.1103
-K = 0.1 # Cost per km
+P = 0.1 # Penalty voor niet thuisbezorgen (delta) 
+K = 0.4 # Cost per km
 
 
 # Locaties
@@ -293,6 +293,26 @@ for j in range(0,C+S+D,1):
           thisLHS = thisLHS + x[i,j]
           thisRHS = thisRHS + x[j,i]
      model.addConstr(lhs=thisLHS, sense=GRB.EQUAL, rhs=thisRHS, name='If arrving, then also leaving route at node %d' % j)
+
+## 12. Subtour elimination C2-C3-S3
+thisLHS = LinExpr()
+thisLHS = thisLHS + x[2,3]+x[3,8]+x[8,2]
+model.addConstr(lhs = thisLHS, sense=GRB.LESS_EQUAL, rhs=2, name='Subtour elimination C2->C3->S3')
+
+thisLHS = LinExpr()
+thisLHS = thisLHS + x[3,2]+x[2,8]+x[8,3]
+model.addConstr(lhs = thisLHS, sense=GRB.LESS_EQUAL, rhs=2, name='Subtour elimination C3->C2->S3')
+
+## 13. Subtour elimination C5-S2
+thisLHS = LinExpr()
+thisLHS = x[5,7]+x[7,5]
+model.addConstr(lhs=thisLHS, sense=GRB.LESS_EQUAL, rhs=1, name='Subtour elimination C5<->S2')
+
+
+## 14. Subtour elimination C2-S3
+thisLHS = LinExpr()
+thisLHS = x[2,8]+x[8,2]
+model.addConstr(lhs=thisLHS, sense=GRB.LESS_EQUAL, rhs=1, name='Subtour elimination C2<->S3')
 
 model.update()
 
