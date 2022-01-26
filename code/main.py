@@ -16,8 +16,7 @@ S = 3 # Number of Shared Delivery Locations
 D = 1 # Number of Depots
 
 P = 0.1 # Penalty voor niet thuisbezorgen (delta) 
-K = 0.4 # Cost per km
-
+K = 5 # Cost per km ----> 1.01 (SDL+Customer) - 1.02 (SDL Only) &&&&&& 0.12 (Customer Only) - 0.13 (SDL+Customer)
 
 # Locaties
 # Alle locaties blijven hetzelfde - anders problemen met branch en bound
@@ -314,6 +313,10 @@ thisLHS = LinExpr()
 thisLHS = x[2,8]+x[8,2]
 model.addConstr(lhs=thisLHS, sense=GRB.LESS_EQUAL, rhs=1, name='Subtour elimination C2<->S3')
 
+## 15. Subtour elimination C3-S3
+thisLHS = LinExpr()
+thisLHS = x[3,8]+x[8,3]
+model.addConstr(lhs=thisLHS, sense=GRB.LESS_EQUAL, rhs=1, name='Subtour elimination C3<->S3')
 model.update()
 
 #################
@@ -356,7 +359,7 @@ for v in model.getVars():
      if v.x != 0.0: # Print all nonzero variables and its values
           print(v.varName, v.x)
           nzsolution.append([v.varName, v.x])
-
+TC = model.ObjVal
 # Plot all nodes (C, SDL, D)
 plt.figure(1)
 plt.plot(Xc,Yc,'o',linewidth=2)
@@ -365,7 +368,7 @@ plt.plot(Xs,Ys,'*',linewidth=2)
 plt.xlim((-1,1))
 plt.ylim((-1,1))
 plt.legend(['Customer','Depot','SDL'])
-plt.title('Low Penalty, High Cost', fontsize='medium')
+plt.title('Low Penalty, High Cost, Total Cost: ' + str(round(TC,2)), fontsize='medium')
 plt.suptitle('Solution')
 
 ## Plot all active links
